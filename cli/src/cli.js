@@ -7,16 +7,22 @@ export const cli = vorpal()
 
 let username
 let server
+let host
+let port
+let timestamp = Date.now()
 
 cli
   .delimiter(cli.chalk['yellow']('ftd~$'))
 
 cli
-  .mode('connect <username>')
+  .mode('connect <username> <host> <port>')
   .delimiter(cli.chalk['green']('connected>'))
   .init(function (args, callback) {
     username = args.username
-    server = connect({ host: 'localhost', port: 8080 }, () => {
+    host = args.host
+    port = args.port
+    // net.connect(port[,host][connectListener]) -> returns new 'net.Socket'; default localhost
+    server = connect({ host: host, port: port }, () => {
       server.write(new Message({ username, command: 'connect' }).toJSON() + '\n')
       callback()
     })
@@ -34,11 +40,17 @@ cli
     const contents = rest.join(' ')
 
     if (command === 'disconnect') {
-      server.end(new Message({ username, command }).toJSON() + '\n')
+      server.end(new Message({ timestamp, username, command }).toJSON() + '\n')
     } else if (command === 'echo') {
-      server.write(new Message({ username, command, contents }).toJSON() + '\n')
+      server.write(new Message({ timestamp, username, command, contents }).toJSON() + '\n')
+    } else if (command === 'broadcast') {
+      server.write(new Message({ timestamp, username, command, contents }).toJSON() + '\n')
+    } else if (command === '@<username>') {
+      server.write(new Message({ timestamp, username, command, contents }).toJSON() + '\n')
+    } else if (command === 'users') {
+      server.write(new Message({ timestamp, username, command, contents }).toJSON() + '\n')
     } else {
-      this.log(`Command <${command}> was not recognized`)
+      this.log(`Command <${command}> was not recognized.  Please enter usable Command`)
     }
 
     callback()

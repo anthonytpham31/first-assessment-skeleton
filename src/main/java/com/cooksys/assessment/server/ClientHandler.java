@@ -29,6 +29,8 @@ public class ClientHandler implements Runnable {
 			ObjectMapper mapper = new ObjectMapper();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+			
+			
 
 			while (!socket.isClosed()) {
 				String raw = reader.readLine();
@@ -48,6 +50,25 @@ public class ClientHandler implements Runnable {
 						writer.write(response);
 						writer.flush();
 						break;
+					case "broadcast":
+						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
+						// Run through multiple users
+						String responseBroadcast = mapper.writeValueAsString(message);
+						writer.write(responseBroadcast);
+						writer.flush();
+						break;
+					case "users":
+						log.info("user <{}> User's List <{}>", message.getUsername(), message.getContents());
+						String userLists = mapper.writeValueAsString(message);
+						writer.write(userLists);
+						writer.flush();
+						break;
+//					case "": // This is not needed for now, Could be used for something else
+//						log.info("user <{}> No Command", message.getUsername());
+//						String noCommand = "Please Enter A Command";
+//						writer.write(noCommand);
+//						writer.flush();
+//						break;
 				}
 			}
 

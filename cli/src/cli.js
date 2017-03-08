@@ -23,7 +23,7 @@ cli
     port = args.port
     // net.connect(port[,host][connectListener]) -> returns new 'net.Socket'; default localhost
     server = connect({ host: host, port: port }, () => {
-      server.write(new Message({ username, command: 'connect' }).toJSON() + '\n')
+      server.write(new Message({ timestamp, username, command: 'connect' }).toJSON() + '\n')
       callback()
     })
 
@@ -36,7 +36,7 @@ cli
     })
   })
   .action(function (input, callback) {
-    const [ command, ...rest ] = words(input)
+    const [ timestamp, command, ...rest ] = words(input)
     const contents = rest.join(' ')
 
     if (command === 'disconnect') {

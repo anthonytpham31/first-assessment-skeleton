@@ -16,7 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cooksys.assessment.model.Message;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 
 public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
@@ -37,6 +39,7 @@ public class ClientHandler implements Runnable {
 			
 			while (!socket.isClosed()) {
 				String raw = reader.readLine();
+				mapper.setVisibility(VisibilityChecker.Std.defaultInstance().withFieldVisibility(JsonAutoDetect.Visibility.ANY));
 				Message message = mapper.readValue(raw, Message.class);
 				String timeStamp = new SimpleDateFormat("HH.mm.ss").format(new Date());
 				List<String> allUsers = new ArrayList<>();

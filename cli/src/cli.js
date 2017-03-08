@@ -9,7 +9,7 @@ let username
 let server
 let host
 let port
-let timestamp = Date.now()
+let timestamp = new Date()
 
 cli
   .delimiter(cli.chalk['yellow']('ftd~$'))

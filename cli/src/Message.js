@@ -20,7 +20,12 @@ export class Message {
   }
 
   toString () {
-    const message = this.timeStamp + ` <` + this.username + `> (` + this.command + `): ` + this.contents
-    return message
+    if (this.command.charAt(0) === '@') {
+      const message = this.timeStamp + ` <` + this.username + `> (whispers): ` + this.contents
+      return message
+    } else {
+      const message = this.timeStamp + ` <` + this.username + `> (` + this.command + `): ` + this.contents
+      return message
+    }
   }
 }

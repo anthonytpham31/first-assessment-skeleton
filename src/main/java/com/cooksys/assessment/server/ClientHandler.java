@@ -33,6 +33,7 @@ public class ClientHandler implements Runnable {
 	private Socket socket;
 	private static HashSet<PrintWriter> writers = new HashSet<>();
 	private static List<String> socketList = new ArrayList<>();
+	
 	public ClientHandler(Socket socket) {
 		super();
 		this.socket = socket;
@@ -116,12 +117,13 @@ public class ClientHandler implements Runnable {
 					case "users":
 						log.info("user <{}> requested User List :", message.getUsername());
 						
-						for (String user : socketList) {
-							String full = mapper.writeValueAsString(user);
-							System.out.println(full);
-							writer.write(full);
-							writer.flush();
-						}
+						
+						message.setTimeStamp(new Date().toString());
+						message.setContents("currently connected users: " + socketList.toString());
+						String full = mapper.writeValueAsString(message);
+						writer.write(full);
+						writer.flush();
+						
 
 						break;
 					}

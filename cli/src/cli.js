@@ -10,16 +10,6 @@ let username
 let server
 let host
 let port
-// let timestamp
-
-// let timeStamp = timeStamp.toLocaleString(
-//   'en-US', {
-//     hour: 'numeric',
-//     minute: 'numeric',
-//     second: 'numeric',
-//     hour12: true
-//   }
-// )
 
 cli
   .delimiter(cli.chalk['yellow']('ftd~$'))
@@ -36,7 +26,7 @@ cli
       callback()
     })
 
-    server.on('data', (buffer) => {
+    server.on('data', (buffer) => { // Hard to read, maybe do something
       if (Message.fromJSON(buffer).command === 'connect') {
         this.log(chalk.green(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'disconnect') {
@@ -62,12 +52,12 @@ cli
 
     if (command === 'disconnect') {
       server.end(new Message({ username, command }).toJSON() + '\n')
-    } else if (command === 'echo') {
+    } else if (command === 'echo' || command === 'broadcast' || command === 'users' || command.charAt(0) === undefined) {
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
-    } else if (command === 'broadcast') {
-      server.write(new Message({ username, command, contents }).toJSON() + '\n')
-    } else if (command === 'users' || command.charAt(0) === undefined) {
-      server.write((``).toJSON() + '\n')
+    // } else if (command === 'broadcast') {
+    //   server.write(new Message({ username, command, contents }).toJSON() + '\n')
+    // } else if (command === 'users' || command.charAt(0) === undefined) {
+    //   server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else if (command.charAt(0) === '@') {
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {

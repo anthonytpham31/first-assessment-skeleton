@@ -32,7 +32,7 @@ public class ClientHandler implements Runnable {
 
 	private Socket socket;
 	private static HashSet<PrintWriter> writers = new HashSet<>();
-	
+	private static List<String> socketList = new ArrayList<>();
 	public ClientHandler(Socket socket) {
 		super();
 		this.socket = socket;
@@ -45,68 +45,84 @@ public class ClientHandler implements Runnable {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 			
-			
 			while (!socket.isClosed()) {
 
 				String raw = reader.readLine();
 				Message message = mapper.readValue(raw, Message.class);
-				
-				List<String> allUsers = new ArrayList<>();
-				HashMap<String, Socket> userMap = new HashMap<>();
-				
-//				userMap.put(message.getUsername(), socket);
-//				allUsers.add(message.getUsername());
 				writers.add(writer);
-
-				System.out.println(writers.toString());
 				
-
+				if(!socketList.contains(message.getUsername())) {
+					socketList.add(message.getUsername());
+				}
 
 				if (message.getCommand().charAt(0) == '@') {
 					message.setTimeStamp(new Date().toString());
-					String whisperMessage = mapper.writeValueAsString(message) + "In Construction";
+					message.setContents("In Construction");
+					String whisperMessage = mapper.writeValueAsString(message);
 					writer.write(whisperMessage);
 					writer.flush();
+					
 				} else {
 					switch (message.getCommand()) {
 					case "connect":
 						log.info("user <{}> connected", message.getUsername());
+						
+						for (PrintWriter writeAlerts : writers) {
+							message.setTimeStamp(new Date().toString());
+							message.setContents(message.getUsername() + " has connected");
+							String alert = mapper.writeValueAsString(message);
+							writeAlerts.write(alert);
+							writeAlerts.flush();
+						}
+						
 						break;
+						
 					case "disconnect":
 						log.info("user <{}> disconnected", message.getUsername());
+						
+						for (PrintWriter writeAlerts : writers) {
+							message.setTimeStamp(new Date().toString());
+							message.setContents(message.getUsername() + " has disconnected");
+							String alert = mapper.writeValueAsString(message);
+							writeAlerts.write(alert);
+							writeAlerts.flush();
+						}
+						
 						this.socket.close();
 						break;
+						
 					case "echo":
 						log.info("user <{}> echoed message <{}>", message.getUsername(), message.getContents());
+						
 						message.setTimeStamp(new Date().toString());
 						String response = mapper.writeValueAsString(message);
 						writer.write(response);
 						writer.flush();
 						break;
+						
 					case "broadcast":
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
 						
 						for (PrintWriter writeBroad : writers) {
-							
-							ObjectMapper mapperBroad = new ObjectMapper();
-							
 							message.setTimeStamp(new Date().toString());
-							String responseBroadcast = mapperBroad.writeValueAsString(message);
-							
+							String responseBroadcast = mapper.writeValueAsString(message);
 							System.out.println(responseBroadcast);
 							writeBroad.write(responseBroadcast);
 							writeBroad.flush();
 						}
 
 						break;
+						
 					case "users":
-						log.info("user <{}> User's List <{}>", message.getUsername(), message.getContents());
-						message.setTimeStamp(new Date().toString());
-						for (String UserList : allUsers) {
-							
-							writer.write(message.getTimeStamp() + UserList);
+						log.info("user <{}> requested User List :", message.getUsername());
+						
+						for (String user : socketList) {
+							String full = mapper.writeValueAsString(user);
+							System.out.println(full);
+							writer.write(full);
 							writer.flush();
 						}
+
 						break;
 					}
 

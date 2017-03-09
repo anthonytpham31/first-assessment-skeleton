@@ -37,8 +37,12 @@ cli
     })
 
     server.on('data', (buffer) => {
-      if (Message.fromJSON(buffer).command === 'echo') {
+      if (Message.fromJSON(buffer).command === 'connect') {
         this.log(chalk.green(Message.fromJSON(buffer).toString()))
+      } else if (Message.fromJSON(buffer).command === 'disconnect') {
+        this.log(chalk.green(Message.fromJSON(buffer).toString()))
+      } else if (Message.fromJSON(buffer).command === 'echo') {
+        this.log(chalk.red(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'broadcast') {
         this.log(chalk.cyan(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command.charAt(0) === '@') {
@@ -62,9 +66,9 @@ cli
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else if (command === 'broadcast') {
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
+    } else if (command === 'users' || command.charAt(0) === undefined) {
+      server.write((``).toJSON() + '\n')
     } else if (command.charAt(0) === '@') {
-      server.write(new Message({ username, command, contents }).toJSON() + '\n')
-    } else if (command === 'users') {
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {
       this.log(`Command <${command}> was not recognized.  Please enter usable Command`)

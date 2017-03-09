@@ -7,6 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cooksys.assessment.model.Message;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 
@@ -38,10 +40,14 @@ public class ClientHandler implements Runnable {
 			PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 			
 			while (!socket.isClosed()) {
+				
 				String raw = reader.readLine();
-				mapper.setVisibility(VisibilityChecker.Std.defaultInstance().withFieldVisibility(JsonAutoDetect.Visibility.ANY));
+				
 				Message message = mapper.readValue(raw, Message.class);
-				String timeStamp = new SimpleDateFormat("HH.mm.ss").format(new Date());
+				
+				Date timestamp = new Date();
+				String timeTest = message.getTimeStamp();
+				
 				List<String> allUsers = new ArrayList<>();
 				
 				
@@ -57,26 +63,27 @@ public class ClientHandler implements Runnable {
 					case "echo":
 						log.info("user <{}> echoed message <{}>", message.getUsername(), message.getContents());
 						String response = mapper.writeValueAsString(message);
-						writer.write(timeStamp + response);
+						writer.write(response);
+						System.out.println(response.toString());
 						writer.flush();
 						break;
 					case "broadcast":
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
 						// Run through multiple users
 						String responseBroadcast = mapper.writeValueAsString(message);
-						writer.write(timeStamp + responseBroadcast);
+						writer.write(responseBroadcast);
 						writer.flush();
 						break;
 					case "users":
 						log.info("user <{}> User's List <{}>", message.getUsername(), message.getContents());
 						String userLists = mapper.writeValueAsString(message);
-						writer.write(timeStamp + userLists);
+						writer.write(userLists);
 						writer.flush();
 						break;
 					case "whispers":
 						log.info("user <{}> whispered message <{}>", message.getUsername(), message.getContents());
 						String whisper = mapper.writeValueAsString(message);
-						writer.write(timeStamp + whisper);
+						writer.write(whisper);
 						writer.flush();
 						
 						break;

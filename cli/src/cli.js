@@ -8,18 +8,30 @@ export const cli = vorpal()
 
 let username
 let server
+let host
+let port
+// let timestamp
+
+// let timeStamp = timeStamp.toLocaleString(
+//   'en-US', {
+//     hour: 'numeric',
+//     minute: 'numeric',
+//     second: 'numeric',
+//     hour12: true
+//   }
+// )
 
 cli
   .delimiter(cli.chalk['yellow']('ftd~$'))
 
 cli
-  .mode('connect <username>')
+  .mode('connect <username> <host> <port>')
   .delimiter(cli.chalk['green']('connected>'))
   .init(function (args, callback) {
     username = args.username
-    // host = args.host
-    // port = args.port
-    server = connect({ host: 'localhost', port: 8080 }, () => {
+    host = args.host
+    port = args.port
+    server = connect({ host: host, port: port }, () => {
       server.write(new Message({ username, command: 'connect' }).toJSON() + '\n')
       callback()
     })

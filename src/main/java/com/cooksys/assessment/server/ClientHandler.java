@@ -6,14 +6,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.security.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +31,8 @@ public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
 	private Socket socket;
-
+	private static HashSet<PrintWriter> writers = new HashSet<>();
+	
 	public ClientHandler(Socket socket) {
 		super();
 		this.socket = socket;
@@ -41,22 +45,30 @@ public class ClientHandler implements Runnable {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 			
-			List<String> allUsers = new ArrayList<>();
-			
-			HashMap<String, String> userMap = new HashMap<>();
 			
 			while (!socket.isClosed()) {
-				
+
 				String raw = reader.readLine();
 				Message message = mapper.readValue(raw, Message.class);
 				
-				allUsers.add(socket.getRemoteSocketAddress().toString());
+				List<String> allUsers = new ArrayList<>();
+				HashMap<String, Socket> userMap = new HashMap<>();
 				
-				userMap.put(socket.getRemoteSocketAddress().toString(), message.getUsername());
+//				userMap.put(message.getUsername(), socket);
+//				allUsers.add(message.getUsername());
+				writers.add(writer);
+
+				System.out.println(writers.toString());
 				
-				
-				System.out.println(userMap);
-				switch (message.getCommand()) {
+
+
+				if (message.getCommand().charAt(0) == '@') {
+					message.setTimeStamp(new Date().toString());
+					String whisperMessage = mapper.writeValueAsString(message) + "In Construction";
+					writer.write(whisperMessage);
+					writer.flush();
+				} else {
+					switch (message.getCommand()) {
 					case "connect":
 						log.info("user <{}> connected", message.getUsername());
 						break;
@@ -69,35 +81,35 @@ public class ClientHandler implements Runnable {
 						message.setTimeStamp(new Date().toString());
 						String response = mapper.writeValueAsString(message);
 						writer.write(response);
-						System.out.println(response);
 						writer.flush();
 						break;
 					case "broadcast":
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
-						// Run through multiple users
-						String responseBroadcast = mapper.writeValueAsString(message);
-						writer.write(responseBroadcast);
-						writer.flush();
-						break;
-					case "whispers":
-						log.info("user <{}> whispered message <{}>", message.getUsername(), message.getContents());
-						String whisper = mapper.writeValueAsString(message);
-						writer.write(whisper);
-						writer.flush();
+						
+						for (PrintWriter writeBroad : writers) {
+							
+							ObjectMapper mapperBroad = new ObjectMapper();
+							
+							message.setTimeStamp(new Date().toString());
+							String responseBroadcast = mapperBroad.writeValueAsString(message);
+							
+							System.out.println(responseBroadcast);
+							writeBroad.write(responseBroadcast);
+							writeBroad.flush();
+						}
+
 						break;
 					case "users":
 						log.info("user <{}> User's List <{}>", message.getUsername(), message.getContents());
-						String userLists = mapper.writeValueAsString(message);
-						writer.write(userLists);
-						writer.flush();
+						message.setTimeStamp(new Date().toString());
+						for (String UserList : allUsers) {
+							
+							writer.write(message.getTimeStamp() + UserList);
+							writer.flush();
+						}
 						break;
+					}
 
-//					case "": // This is not needed for now, Could be used for something else; possibly repeat commands
-//						log.info("user <{}> No Command", message.getUsername());
-//						String noCommand = "Please Enter A Command";
-//						writer.write(noCommand);
-//						writer.flush();
-//						break;
 				}
 			}
 

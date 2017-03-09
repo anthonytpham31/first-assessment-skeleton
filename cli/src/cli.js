@@ -47,17 +47,13 @@ cli
     })
   })
   .action(function (input, callback) {
-    const [ command, ...rest ] = words(input, /[^,\s:]+/g)
+    const [ command, ...rest ] = words(input, /[^,\s:@]+/g)
     const contents = rest.join(' ')
 
     if (command === 'disconnect') {
       server.end(new Message({ username, command }).toJSON() + '\n')
     } else if (command === 'echo' || command === 'broadcast' || command === 'users' || command.charAt(0) === undefined) {
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
-    // } else if (command === 'broadcast') {
-    //   server.write(new Message({ username, command, contents }).toJSON() + '\n')
-    // } else if (command === 'users' || command.charAt(0) === undefined) {
-    //   server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else if (command.charAt(0) === '@') {
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {

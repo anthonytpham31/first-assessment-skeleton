@@ -57,7 +57,7 @@ public class ClientHandler implements Runnable {
 				}
 
 				if (message.getCommand().charAt(0) == '@') {
-					message.setTimeStamp(new Date().toString());
+					message.setTimestamp(new Date().toString());
 					message.setContents("In Construction");
 					String whisperMessage = mapper.writeValueAsString(message);
 					writer.write(whisperMessage);
@@ -69,7 +69,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> connected", message.getUsername());
 						
 						for (PrintWriter writeAlerts : writers) {
-							message.setTimeStamp(new Date().toString());
+							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has connected");
 							String alert = mapper.writeValueAsString(message);
 							writeAlerts.write(alert);
@@ -82,7 +82,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> disconnected", message.getUsername());
 						
 						for (PrintWriter writeAlerts : writers) {
-							message.setTimeStamp(new Date().toString());
+							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has disconnected");
 							String alert = mapper.writeValueAsString(message);
 							writeAlerts.write(alert);
@@ -95,7 +95,7 @@ public class ClientHandler implements Runnable {
 					case "echo":
 						log.info("user <{}> echoed message <{}>", message.getUsername(), message.getContents());
 						
-						message.setTimeStamp(new Date().toString());
+						message.setTimestamp(new Date().toString());
 						String response = mapper.writeValueAsString(message);
 						writer.write(response);
 						writer.flush();
@@ -105,7 +105,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
 						
 						for (PrintWriter writeBroad : writers) {
-							message.setTimeStamp(new Date().toString());
+							message.setTimestamp(new Date().toString());
 							String responseBroadcast = mapper.writeValueAsString(message);
 							System.out.println(responseBroadcast);
 							writeBroad.write(responseBroadcast);
@@ -118,7 +118,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> requested User List :", message.getUsername());
 						
 						
-						message.setTimeStamp(new Date().toString());
+						message.setTimestamp(new Date().toString());
 						message.setContents("currently connected users: " + socketList.toString());
 						String full = mapper.writeValueAsString(message);
 						writer.write(full);

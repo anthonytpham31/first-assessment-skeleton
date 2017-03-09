@@ -8,17 +8,6 @@ export const cli = vorpal()
 
 let username
 let server
-// let host
-// let port
-let timestamp = new Date()
-timestamp = timestamp.toLocaleString(
-  'en-US', {
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hour12: true
-  }
-)
 
 cli
   .delimiter(cli.chalk['yellow']('ftd~$'))
@@ -37,13 +26,13 @@ cli
 
     server.on('data', (buffer) => {
       if (Message.fromJSON(buffer).command === 'echo') {
-        this.log(timestamp + ` ` + username.toString ` : ` + chalk.red(Message.fromJSON(buffer).toString()))
+        this.log(chalk.green(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'broadcast') {
-        this.log(timestamp + ` ` + username.toString ` : ` + chalk.cyan(Message.fromJSON(buffer).toString()))
+        this.log(chalk.cyan(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command.charAt(0) === '@') {
-        this.log(timestamp + ` ` + username.toString ` : ` + chalk.white(Message.fromJSON(buffer).toString()))
+        this.log(chalk.white(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'users') {
-        this.log(timestamp + ` ` + username.toString ` : ` + chalk.magenta(Message.fromJSON(buffer).toString()))
+        this.log(chalk.magenta(Message.fromJSON(buffer).toString()))
       }
     })
 

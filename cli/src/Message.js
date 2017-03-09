@@ -3,8 +3,8 @@ export class Message {
     return new Message(JSON.parse(buffer.toString()))
   }
 
-  constructor ({ timestamp, username, command, contents }) {
-    this.timestamp = timestamp
+  constructor ({ timeStamp, username, command, contents }) {
+    this.timeStamp = timeStamp
     this.username = username
     this.command = command
     this.contents = contents
@@ -12,7 +12,7 @@ export class Message {
 
   toJSON () {
     return JSON.stringify({
-      timestamp: this.timestamp,
+      timestamp: this.timeStamp,
       username: this.username,
       command: this.command,
       contents: this.contents
@@ -20,6 +20,7 @@ export class Message {
   }
 
   toString () {
-    return this.contents
+    const message = this.timeStamp + ` <` + this.username + `> (` + this.command + `): ` + this.contents
+    return message
   }
 }

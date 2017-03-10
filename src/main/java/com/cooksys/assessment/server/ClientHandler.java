@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,7 @@ public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
 	private Socket socket;
-	private static HashSet<PrintWriter> writers = new HashSet<>();
-	private static List<String> socketList = new ArrayList<>();
+	private static HashMap<PrintWriter, String> testMap = new HashMap<>();	
 	
 	public ClientHandler(Socket socket) {
 		super();
@@ -50,30 +50,36 @@ public class ClientHandler implements Runnable {
 
 				String raw = reader.readLine();
 				Message message = mapper.readValue(raw, Message.class);
-				writers.add(writer);
 				
-				if(!socketList.contains(message.getUsername())) {
-					socketList.add(message.getUsername());
-				}
-
 				if (message.getCommand().charAt(0) == '@') {
-					message.setTimestamp(new Date().toString());
-					message.setContents("In Construction");
-					String whisperMessage = mapper.writeValueAsString(message);
-					writer.write(whisperMessage);
-					writer.flush();
+					log.info("user <{}> whispered to <{}>", message.getUsername(), message.getCommand());
+					
+					for(Entry<PrintWriter, String> whisperTest : testMap.entrySet()) {
+						if (message.getCommand().equals("@"+whisperTest.getValue())){
+							message.setTimestamp(new Date().toString());
+							
+							String whisperMessage = mapper.writeValueAsString(message);
+							
+							whisperTest.getKey().write(whisperMessage);
+							whisperTest.getKey().flush();
+						} 
+					}
 					
 				} else {
 					switch (message.getCommand()) {
 					case "connect":
 						log.info("user <{}> connected", message.getUsername());
 						
-						for (PrintWriter writeAlerts : writers) {
+						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
 							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has connected");
 							String alert = mapper.writeValueAsString(message);
-							writeAlerts.write(alert);
-							writeAlerts.flush();
+							writeAlerts.getKey().write(alert);
+							writeAlerts.getKey().flush();
+						}
+						
+						if(!testMap.containsValue(message.getUsername())) {
+							testMap.put(writer, message.getUsername());
 						}
 						
 						break;
@@ -81,14 +87,15 @@ public class ClientHandler implements Runnable {
 					case "disconnect":
 						log.info("user <{}> disconnected", message.getUsername());
 						
-						for (PrintWriter writeAlerts : writers) {
+						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
 							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has disconnected");
 							String alert = mapper.writeValueAsString(message);
-							writeAlerts.write(alert);
-							writeAlerts.flush();
+							writeAlerts.getKey().write(alert);
+							writeAlerts.getKey().flush();
 						}
-						
+
+						testMap.remove(writer, message.getUsername());
 						this.socket.close();
 						break;
 						
@@ -104,12 +111,11 @@ public class ClientHandler implements Runnable {
 					case "broadcast":
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
 						
-						for (PrintWriter writeBroad : writers) {
+						for (Entry<PrintWriter, String> writeBroad : testMap.entrySet()) {
 							message.setTimestamp(new Date().toString());
 							String responseBroadcast = mapper.writeValueAsString(message);
-							System.out.println(responseBroadcast);
-							writeBroad.write(responseBroadcast);
-							writeBroad.flush();
+							writeBroad.getKey().write(responseBroadcast);
+							writeBroad.getKey().flush();
 						}
 
 						break;
@@ -117,14 +123,12 @@ public class ClientHandler implements Runnable {
 					case "users":
 						log.info("user <{}> requested User List :", message.getUsername());
 						
-						
 						message.setTimestamp(new Date().toString());
-						message.setContents("currently connected users: " + socketList.toString());
+						message.setContents("currently connected users: " + testMap.values().toString());
 						String full = mapper.writeValueAsString(message);
 						writer.write(full);
 						writer.flush();
 						
-
 						break;
 					}
 

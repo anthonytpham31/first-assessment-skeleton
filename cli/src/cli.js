@@ -8,7 +8,7 @@ export const cli = vorpal()
 
 let username
 let server
-
+// let commandCounter
 cli
   .delimiter(cli.chalk['yellow']('ftd~$'))
 
@@ -51,9 +51,21 @@ cli
     if (command === 'disconnect') {
       server.end(new Message({ username, command }).toJSON() + '\n')
     } else if (command === 'echo' || command === 'broadcast' || command === 'users' ||
-      command.charAt(0) === undefined || command.charAt(0) === '@') {
+      command.charAt(0) === '@') {
+      //  commandCounter = command
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {
+      // if (commandCounter === 'echo' || commandCounter === 'broadcast' ||
+      // commandCounter === 'users' || commandCounter.charAt(0) === '@') {
+      //   const fullMessage = command + ` ` + contents
+      //   let newMessage = {
+      //     username: username,
+      //     command: commandCounter,
+      //     contents: fullMessage
+      //   }
+      //   server.write(newMessage.toJSON() + '\n')
+      // } else {
+      // }
       this.log(`Command <${command}> was not recognized.  Please enter usable Command`)
     }
 

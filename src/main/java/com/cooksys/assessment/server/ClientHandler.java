@@ -6,32 +6,20 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.security.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.cooksys.assessment.model.Message;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
+
 
 public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
 	private Socket socket;
+	private String timestamp = new Date().toString();
 	private static HashMap<PrintWriter, String> testMap = new HashMap<>();	
 	
 	public ClientHandler(Socket socket) {
@@ -56,7 +44,7 @@ public class ClientHandler implements Runnable {
 					
 					for(Entry<PrintWriter, String> whisperTest : testMap.entrySet()) {
 						if (message.getCommand().equals("@"+whisperTest.getValue())){
-							message.setTimestamp(new Date().toString());
+							message.setTimestamp(timestamp);
 							
 							String whisperMessage = mapper.writeValueAsString(message);
 							
@@ -71,7 +59,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> connected", message.getUsername());
 						
 						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
-							message.setTimestamp(new Date().toString());
+							message.setTimestamp(timestamp);
 							message.setContents(message.getUsername() + " has connected");
 							String alert = mapper.writeValueAsString(message);
 							writeAlerts.getKey().write(alert);
@@ -88,7 +76,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> disconnected", message.getUsername());
 						
 						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
-							message.setTimestamp(new Date().toString());
+							message.setTimestamp(timestamp);
 							message.setContents(message.getUsername() + " has disconnected");
 							String alert = mapper.writeValueAsString(message);
 							writeAlerts.getKey().write(alert);
@@ -112,7 +100,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
 						
 						for (Entry<PrintWriter, String> writeBroad : testMap.entrySet()) {
-							message.setTimestamp(new Date().toString());
+							message.setTimestamp(timestamp);
 							String responseBroadcast = mapper.writeValueAsString(message);
 							writeBroad.getKey().write(responseBroadcast);
 							writeBroad.getKey().flush();
@@ -123,7 +111,7 @@ public class ClientHandler implements Runnable {
 					case "users":
 						log.info("user <{}> requested User List :", message.getUsername());
 						
-						message.setTimestamp(new Date().toString());
+						message.setTimestamp(timestamp);
 						message.setContents("currently connected users: " + testMap.values().toString());
 						String full = mapper.writeValueAsString(message);
 						writer.write(full);
@@ -131,7 +119,6 @@ public class ClientHandler implements Runnable {
 						
 						break;
 					}
-
 				}
 			}
 

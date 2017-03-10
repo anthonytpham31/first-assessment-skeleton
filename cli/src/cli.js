@@ -8,7 +8,7 @@ export const cli = vorpal()
 
 let username
 let server
-// let commandCounter
+let commandCounter
 cli
   .delimiter(cli.chalk['yellow']('ftd~$'))
 
@@ -48,26 +48,26 @@ cli
     const [ command, ...rest ] = words(input, /[^,\s]+/g)
     const contents = rest.join(' ')
 
+    // let fullMessage = command + ` ` + contents
     if (command === 'disconnect') {
       server.end(new Message({ username, command }).toJSON() + '\n')
     } else if (command === 'echo' || command === 'broadcast' || command === 'users' ||
       command.charAt(0) === '@') {
-      //  commandCounter = command
+      commandCounter = command
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {
-      // if (commandCounter === 'echo' || commandCounter === 'broadcast' ||
-      // commandCounter === 'users' || commandCounter.charAt(0) === '@') {
-      //   const fullMessage = command + ` ` + contents
-      //   let newMessage = {
-      //     username: username,
-      //     command: commandCounter,
-      //     contents: fullMessage
-      //   }
-      //   server.write(newMessage.toJSON() + '\n')
-      // } else {
-      // }
-      this.log(`Command <${command}> was not recognized.  Please enter usable Command`)
+      // console.log(contents)
+      let fullMessage = command + ` ` + contents
+      if (commandCounter === 'echo' || commandCounter === 'broadcast' ||
+      commandCounter === 'users' || commandCounter.charAt(0) === '@') {
+        // console.log(command)
+        // let fullMessage = command + ` ` + contents
+        let contents = fullMessage
+        let command = commandCounter
+        server.write(new Message({ username, command, contents }).toJSON() + '\n')
+      } else {
+        this.log(`Command <${command}> was not recognized.  Please enter usable Command`)
+      }
     }
-
     callback()
   })

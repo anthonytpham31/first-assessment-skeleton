@@ -32,9 +32,7 @@ public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
 	private Socket socket;
-	private String timeStamp = new Date().toString();
 	private static HashMap<PrintWriter, String> testMap = new HashMap<>();	
-	private String commandCounter;
 	
 	public ClientHandler(Socket socket) {
 		super();
@@ -58,13 +56,14 @@ public class ClientHandler implements Runnable {
 					
 					for(Entry<PrintWriter, String> whisperTest : testMap.entrySet()) {
 						if (message.getCommand().equals("@"+whisperTest.getValue())){
-							message.setTimestamp(timeStamp);
+							message.setTimestamp(new Date().toString());
+							
 							String whisperMessage = mapper.writeValueAsString(message);
+							
 							whisperTest.getKey().write(whisperMessage);
 							whisperTest.getKey().flush();
 						} 
 					}
-					commandCounter = message.getCommand();
 					
 				} else {
 					switch (message.getCommand()) {
@@ -72,10 +71,9 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> connected", message.getUsername());
 						
 						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
-							message.setTimestamp(timeStamp);
+							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has connected");
 							String alert = mapper.writeValueAsString(message);
-							System.out.println(alert);
 							writeAlerts.getKey().write(alert);
 							writeAlerts.getKey().flush();
 						}
@@ -83,13 +81,14 @@ public class ClientHandler implements Runnable {
 						if(!testMap.containsValue(message.getUsername())) {
 							testMap.put(writer, message.getUsername());
 						}
+						
 						break;
 						
 					case "disconnect":
 						log.info("user <{}> disconnected", message.getUsername());
 						
 						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
-							message.setTimestamp(timeStamp);
+							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has disconnected");
 							String alert = mapper.writeValueAsString(message);
 							writeAlerts.getKey().write(alert);
@@ -103,51 +102,38 @@ public class ClientHandler implements Runnable {
 					case "echo":
 						log.info("user <{}> echoed message <{}>", message.getUsername(), message.getContents());
 						
-						message.setTimestamp(timeStamp);
+						message.setTimestamp(new Date().toString());
 						String response = mapper.writeValueAsString(message);
-						System.out.println(response);
 						writer.write(response);
 						writer.flush();
-						commandCounter = message.getCommand();
 						break;
 						
 					case "broadcast":
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
 						
 						for (Entry<PrintWriter, String> writeBroad : testMap.entrySet()) {
-							message.setTimestamp(timeStamp);
+							message.setTimestamp(new Date().toString());
 							String responseBroadcast = mapper.writeValueAsString(message);
 							writeBroad.getKey().write(responseBroadcast);
 							writeBroad.getKey().flush();
 						}
-						commandCounter = message.getCommand();
+
 						break;
 						
 					case "users":
 						log.info("user <{}> requested User List :", message.getUsername());
 						
-						message.setTimestamp(timeStamp);
+						message.setTimestamp(new Date().toString());
 						message.setContents("currently connected users: " + testMap.values().toString());
 						String full = mapper.writeValueAsString(message);
 						writer.write(full);
 						writer.flush();
 						
-						commandCounter = message.getCommand();
 						break;
 					}
+
 				}
-				if (message.getCommand() != "echo" || message.getCommand() != "broadcast" || message.getCommand() != "users") {
-					message.setTimestamp(timeStamp);
-					String commandIsContent = message.getCommand() + message.getContents();
-					message.setCommand(commandCounter);
-					message.setContents(commandIsContent);
-					String full = mapper.writeValueAsString(message);
-					writer.write(full);
-					writer.flush();
-					commandCounter = message.getCommand();
-				}
-			}	
-				
+			}
 
 		} catch (IOException e) {
 			log.error("Something went wrong :/", e);

@@ -20,8 +20,15 @@ export class Message {
   }
 
   toString () {
-    if (this.command.charAt(0) === '@') {
+    if (this.command === null) {
+      this.command = 'connect'
+      const message = this.timestamp + ` <` + this.username + `> (` + this.command + `): ` + this.contents
+      return message
+    } else if (this.command.charAt(0) === '@') {
       const message = this.timestamp + ` <` + this.username + `> (whispers): ` + this.contents
+      return message
+    } else if (this.command === 'users') {
+      const message = this.timestamp + this.contents
       return message
     } else {
       const message = this.timestamp + ` <` + this.username + `> (` + this.command + `): ` + this.contents

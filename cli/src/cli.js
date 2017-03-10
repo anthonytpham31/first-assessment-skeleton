@@ -33,6 +33,9 @@ cli
         this.log(chalk.magenta(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'broadcast') {
         this.log(chalk.cyan(Message.fromJSON(buffer).toString()))
+      } else if (Message.fromJSON(buffer).command === null) {
+        Message.fromJSON(buffer).command = `connect`
+        this.log(chalk.white(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command.charAt(0) === '@') {
         this.log(chalk.white(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'users') {
@@ -51,7 +54,7 @@ cli
     if (command === 'disconnect') {
       server.end(new Message({ username, command }).toJSON() + '\n')
     } else if (command === 'echo' || command === 'broadcast' || command === 'users' ||
-      command.charAt(0) === undefined || command.charAt(0) === '@') {
+      command.charAt(0) === '@') {
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {
       this.log(`Command <${command}> was not recognized.  Please enter usable Command`)

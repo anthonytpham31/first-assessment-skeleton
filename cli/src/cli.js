@@ -13,12 +13,10 @@ cli
   .delimiter(cli.chalk['yellow']('ftd~$'))
 
 cli
-  .mode('connect <username> <host> <port>')
+  .mode('connect <username> [host] [port]')
   .delimiter(cli.chalk['green']('connected>'))
-  .init(function (args, callback) {
-    username = args.username
-    let host = args.host
-    let port = args.port
+  .init(function ({username: user, host = 'localhost', port = 8080}, callback) {
+    username = user
     server = connect({ host: host, port: port }, () => {
       server.write(new Message({ username, command: 'connect' }).toJSON() + '\n')
       callback()
@@ -48,20 +46,18 @@ cli
     const [ command, ...rest ] = words(input, /[^,\s]+/g)
     const contents = rest.join(' ')
 
-    // let fullMessage = command + ` ` + contents
     if (command === 'disconnect') {
       server.end(new Message({ username, command }).toJSON() + '\n')
+    } else if (command === undefined) {
+      this.log(`Enter A Valid Command`)
     } else if (command === 'echo' || command === 'broadcast' || command === 'users' ||
       command.charAt(0) === '@') {
       commandCounter = command
       server.write(new Message({ username, command, contents }).toJSON() + '\n')
     } else {
-      // console.log(contents)
       let fullMessage = command + ` ` + contents
       if (commandCounter === 'echo' || commandCounter === 'broadcast' ||
       commandCounter === 'users' || commandCounter.charAt(0) === '@') {
-        // console.log(command)
-        // let fullMessage = command + ` ` + contents
         let contents = fullMessage
         let command = commandCounter
         server.write(new Message({ username, command, contents }).toJSON() + '\n')

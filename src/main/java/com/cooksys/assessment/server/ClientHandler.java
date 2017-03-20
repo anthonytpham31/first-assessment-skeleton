@@ -19,9 +19,8 @@ public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
 	private Socket socket;
-	private String timestamp = new Date().toString();
 	private static HashMap<PrintWriter, String> testMap = new HashMap<>();	
-	
+	// synchronize
 	public ClientHandler(Socket socket) {
 		super();
 		this.socket = socket;
@@ -35,7 +34,7 @@ public class ClientHandler implements Runnable {
 			PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 			
 			while (!socket.isClosed()) {
-
+				
 				String raw = reader.readLine();
 				Message message = mapper.readValue(raw, Message.class);
 				
@@ -44,7 +43,7 @@ public class ClientHandler implements Runnable {
 					
 					for(Entry<PrintWriter, String> whisperTest : testMap.entrySet()) {
 						if (message.getCommand().equals("@"+whisperTest.getValue())){
-							message.setTimestamp(timestamp);
+							message.setTimestamp(new Date().toString());
 							
 							String whisperMessage = mapper.writeValueAsString(message);
 							
@@ -58,16 +57,16 @@ public class ClientHandler implements Runnable {
 					case "connect":
 						log.info("user <{}> connected", message.getUsername());
 						
+						if(!testMap.containsValue(message.getUsername())) {
+							testMap.put(writer, message.getUsername());
+						}
+						
 						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
-							message.setTimestamp(timestamp);
+							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has connected");
 							String alert = mapper.writeValueAsString(message);
 							writeAlerts.getKey().write(alert);
 							writeAlerts.getKey().flush();
-						}
-						
-						if(!testMap.containsValue(message.getUsername())) {
-							testMap.put(writer, message.getUsername());
 						}
 						
 						break;
@@ -75,15 +74,16 @@ public class ClientHandler implements Runnable {
 					case "disconnect":
 						log.info("user <{}> disconnected", message.getUsername());
 						
+						testMap.remove(writer, message.getUsername());
+						
 						for (Entry<PrintWriter, String> writeAlerts : testMap.entrySet()) {
-							message.setTimestamp(timestamp);
+							message.setTimestamp(new Date().toString());
 							message.setContents(message.getUsername() + " has disconnected");
 							String alert = mapper.writeValueAsString(message);
 							writeAlerts.getKey().write(alert);
 							writeAlerts.getKey().flush();
 						}
 
-						testMap.remove(writer, message.getUsername());
 						this.socket.close();
 						break;
 						
@@ -100,7 +100,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> broadcasted message <{}>", message.getUsername(), message.getContents());
 						
 						for (Entry<PrintWriter, String> writeBroad : testMap.entrySet()) {
-							message.setTimestamp(timestamp);
+							message.setTimestamp(new Date().toString());
 							String responseBroadcast = mapper.writeValueAsString(message);
 							writeBroad.getKey().write(responseBroadcast);
 							writeBroad.getKey().flush();
@@ -111,7 +111,7 @@ public class ClientHandler implements Runnable {
 					case "users":
 						log.info("user <{}> requested User List :", message.getUsername());
 						
-						message.setTimestamp(timestamp);
+						message.setTimestamp(new Date().toString());
 						message.setContents("currently connected users: " + testMap.values().toString());
 						String full = mapper.writeValueAsString(message);
 						writer.write(full);
@@ -126,5 +126,5 @@ public class ClientHandler implements Runnable {
 			log.error("Something went wrong :/", e);
 		}
 	}
-
 }
+

@@ -1,5 +1,4 @@
 import vorpal from 'vorpal'
-import { words } from 'lodash'
 import { connect } from 'net'
 import { Message } from './Message'
 const chalk = require('chalk')
@@ -18,18 +17,23 @@ cli
   .init(function ({username: user, host = 'localhost', port = 8080}, callback) {
     username = user
     server = connect({ host: host, port: port }, () => {
+      console.log(this.username + 'entry')
+      console.log(this.command + 'entry')
       server.write(new Message({ username, command: 'connect' }).toJSON() + '\n')
       callback()
     })
 
     server.on('data', (buffer) => { // Hard to read, maybe do something
-      if (Message.fromJSON(buffer).command === 'connect') {
+      if (Message.fromJSON(buffer).command === null) {
+        console.log('Please Enter Valid Command')
+      } else if (Message.fromJSON(buffer).command === 'connect') {
         this.log(chalk.green(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'disconnect') {
         this.log(chalk.green(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'echo') {
         this.log(chalk.magenta(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command === 'broadcast') {
+        console.log('what the flying fuck is going on')
         this.log(chalk.cyan(Message.fromJSON(buffer).toString()))
       } else if (Message.fromJSON(buffer).command.charAt(0) === '@') {
         this.log(chalk.white(Message.fromJSON(buffer).toString()))
@@ -43,7 +47,7 @@ cli
     })
   })
   .action(function (input, callback) {
-    const [ command, ...rest ] = words(input, /[^,\s]+/g)
+    const [ command, ...rest ] = input.split(' ')
     const contents = rest.join(' ')
 
     if (command === 'disconnect') {
@@ -60,6 +64,8 @@ cli
       commandCounter === 'users' || commandCounter.charAt(0) === '@') {
         let contents = fullMessage
         let command = commandCounter
+        console.log(contents + 'this is commandCounter')
+        console.log(command + 'this is commandCounter')
         server.write(new Message({ username, command, contents }).toJSON() + '\n')
       } else {
         this.log(`Command <${command}> was not recognized.  Please enter usable Command`)

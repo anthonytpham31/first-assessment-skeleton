@@ -11,6 +11,10 @@ export class Message {
   }
 
   toJSON () {
+    console.log(this.timestamp + 'toJSON')
+    console.log(this.username + 'toJSON')
+    console.log(this.command + 'toJSON')
+    console.log(this.contents + 'toJSON')
     return JSON.stringify({
       timestamp: this.timestamp,
       username: this.username,
@@ -25,6 +29,14 @@ export class Message {
       return message
     } else if (this.command === 'users') {
       const message = this.timestamp + ` ` + this.contents
+      return message
+    } else if (this.command === 'broadcast') {
+      const message = this.timestamp + ` <` + this.username + `> (all): ` + this.contents
+      console.log(message + 'toString')
+      console.log(this.timestamp + 'toString')
+      console.log(this.username + 'toString')
+      console.log(this.command + 'toString')
+      console.log(this.contents + 'toString')
       return message
     } else {
       const message = this.timestamp + ` <` + this.username + `> (` + this.command + `): ` + this.contents

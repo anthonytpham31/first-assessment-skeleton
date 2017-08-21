@@ -11,25 +11,21 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.cooksys.assessment.model.Message;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.cooksys.assessment.model.MessageCenter;
+import com.cooksys.assessment.model.UserCenter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 public class ClientHandler implements Runnable {
 	private Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
-	private Socket socket;
-	private static Map<String, ClientHandler> testMap = new HashMap<>();	
-	private Map<String, ClientHandler> userMap = new HashMap<>();
+	private Socket socket;	
 	private PrintWriter writer;
-
+	private Map<String, ClientHandler> userMap = new HashMap<>();
+	
 	public ClientHandler(Socket socket) throws IOException {
 		super();
 		this.socket = socket;
@@ -46,6 +42,8 @@ public class ClientHandler implements Runnable {
 				
 				String raw = reader.readLine();
 				Message message = mapper.readValue(raw, Message.class);
+				MessageCenter messageCenter = new MessageCenter(userMap);
+				UserCenter userCenter = new UserCenter(userMap);
 				
 				if (message.getCommand().charAt(0) == '@') {
 					log.info("user <{}> whispered to <{}> message <{}>", message.getUsername(), message.getCommand(), message.getContents());
@@ -55,10 +53,10 @@ public class ClientHandler implements Runnable {
 					String whisperMessage = mapper.writeValueAsString(message);
 					String failedMessage = "User is not in this chat room";
 					
-					if (userExists(username)) {
-						sendDirectMessageToUser(testMap.get(username), whisperMessage);
+					if (userCenter.userExists(username)) {
+						sendDirectMessageToUser(userMap.get(username), whisperMessage);
 					} else {
-						sendDirectMessageToUser(testMap.get(message.getUsername()), failedMessage);
+						sendDirectMessageToUser(userMap.get(message.getUsername()), failedMessage);
 					}
 					
 				} else {
@@ -70,7 +68,6 @@ public class ClientHandler implements Runnable {
 						message.setContents(message.getUsername() + " has connected");
 						String connectAlert = mapper.writeValueAsString(message);
 						sendMessageToAllUsers(connectAlert);
-						System.out.println(connectAlert + " connect message");
 						if(!userExists(message.getUsername())) {
 							addUser(message.getUsername(), this);
 						} else {
@@ -101,7 +98,7 @@ public class ClientHandler implements Runnable {
 						log.info("user <{}> echoed message <{}>", message.getUsername(), message.getContents());
 						message.setTimestamp(new Date().toString());
 						String response = mapper.writeValueAsString(message);
-						sendDirectMessageToUser(testMap.get(message.getUsername()), response);
+						messages.sendDirectMessageToUser(userMap.get(message.getUsername()), response);
 						break;
 						
 					case "broadcast":
@@ -109,17 +106,16 @@ public class ClientHandler implements Runnable {
 						
 						message.setTimestamp(new Date().toString());
 						String responseBroadcast = mapper.writeValueAsString(message);
-						sendMessageToAllUsers(responseBroadcast);
+						messages.sendMessageToAllUsers(responseBroadcast);
 						break;
 						
 					case "users":
-						log.info("user <{}> requested User List : <{}>", message.getUsername(), testMap.keySet());
-						System.out.println(getAllUsers());
+						log.info("user <{}> requested User List : <{}>", message.getUsername(), userMap.keySet());
+						System.out.println(users.getAllUsers());
 						message.setTimestamp(new Date().toString());
-						message.setContents("currently connected users: " + getAllUsers());
+						message.setContents("currently connected users: " + users.getAllUsers());
 						String full = mapper.writeValueAsString(message);
-						sendDirectMessageToUser(testMap.get(message.getUsername()), full);
-						System.out.println(full);
+						messages.sendDirectMessageToUser(userMap.get(message.getUsername()), full);
 						break;
 					}
 				}
@@ -129,44 +125,23 @@ public class ClientHandler implements Runnable {
 			log.error("Something went wrong :/", e);
 		}
 	}
+
+	public Socket getSocket() {
+		return socket;
+	}
+
+	public void setSocket(Socket socket) {
+		this.socket = socket;
+	}
+
+	public PrintWriter getWriter() {
+		return writer;
+	}
+
+	public void setWriter(PrintWriter writer) {
+		this.writer = writer;
+	}
 	
-	// Message methods; Might need to move to another class for readability
 	
-	private void sendMessageToAllUsers(String messageToSend) {
-        for (ClientHandler targetUser : testMap.values()) {
-			sendDirectMessageToUser(targetUser, messageToSend);
-        }
-    }
-
-    private void sendDirectMessageToUser(ClientHandler targetUser, String messageToSend) {
-    	targetUser.writer.write(messageToSend);
-    }
-    
-    
-    private void addUser(String userName, ClientHandler client) {
-        testMap.put(userName, client);
-    }
-    
-    private void removeUser(String username, ClientHandler client) {
-    	testMap.remove(username, client);
-    }
-    
-    private List<String> getAllUsers() {
-        List<String> currentActiveUsers = new ArrayList<>(testMap.keySet());
-        return currentActiveUsers;
-    }
-
-    private boolean userExists(String username) {
-        return testMap.containsKey(username);
-    }
-
-
-    public Socket getSocket() {
-        return socket;
-    }
-
-    public void setSocket(Socket socket) {
-        this.socket = socket;
-    }
 }
 
